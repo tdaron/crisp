@@ -29,6 +29,9 @@ lval_t *eval(lval_t *val) {
     if (sv_eq(val->content.sym, sv_from_cstr("define"))) {
       lval_t *name = val->cells;
       lval_t *value = val->cells->next;
+      if (name->type == LVAL_SYM) {
+        value = eval(value);
+      }
       state_define_symbol(name, value);
       return eval(name);
     }
