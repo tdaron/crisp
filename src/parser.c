@@ -3,17 +3,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <arena.h>
 
 bool is_whitespace(char v) { return v == ' '; }
 
 bool valid_sym(char v) { return !(is_whitespace(v)) && v != ')'; }
-lval *parse_atom(SV *input);
+lval_t *parse_atom(SV *input);
 
-lval *parse_sexpr(SV *input) {
+lval_t *parse_sexpr(SV *input) {
   consume(input); // first (
   sv_chop_left_while(input, is_whitespace);
 
-  lval *operand = parse_atom(input);
+  lval_t*operand = parse_atom(input);
 
   if (operand->type != LVAL_SYM) {
     printf("S-Expressions should start with a symbol...\n");
@@ -23,8 +24,8 @@ lval *parse_sexpr(SV *input) {
 
   sv_chop_left_while(input, is_whitespace);
   while (input->count > 0 && *input->data != ')') {
-    lval *child = parse(input);
-    lval *last = operand->cells;
+    lval_t*child = parse(input);
+    lval_t*last = operand->cells;
     if (last == NULL) {
       operand->cells = child;
     } else {
@@ -44,7 +45,7 @@ lval *parse_sexpr(SV *input) {
   return operand;
 }
 
-lval *parse_atom(SV *input) {
+lval_t*parse_atom(SV *input) {
   SV atom_content = sv_chop_left_while(input, valid_sym);
   char buf[16];
 
@@ -61,7 +62,7 @@ lval *parse_atom(SV *input) {
   char *end;
   double result = strtod(buf, &end);
   if (end != NULL && (size_t)(end - buf) == atom_content.count) {
-    lval *val = malloc(sizeof(lval));
+    lval_t*val = context_alloc(sizeof(lval_t));
     val->type = LVAL_NUM;
     val->cells = NULL;
     val->content.num = result;
@@ -70,7 +71,7 @@ lval *parse_atom(SV *input) {
   }
 
 sym: {
-  lval *val = malloc(sizeof(lval));
+  lval_t*val = context_alloc(sizeof(lval_t));
   val->type = LVAL_SYM;
   val->cells = NULL;
   val->content.sym = atom_content;
@@ -79,7 +80,7 @@ sym: {
 }
 }
 
-lval *parse(SV *input) {
+lval_t*parse(SV *input) {
   sv_chop_left_while(input, is_whitespace);
 
   if (*input->data == '(') {
