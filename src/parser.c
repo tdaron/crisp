@@ -62,7 +62,7 @@ lval_t*parse_atom(SV *input) {
   char *end;
   double result = strtod(buf, &end);
   if (end != NULL && (size_t)(end - buf) == atom_content.count) {
-    lval_t*val = context_alloc(sizeof(lval_t));
+    lval_t*val = context_alloc(&tmp_arena, sizeof(lval_t));
     val->type = LVAL_NUM;
     val->cells = NULL;
     val->content.num = result;
@@ -71,7 +71,7 @@ lval_t*parse_atom(SV *input) {
   }
 
 sym: {
-  lval_t*val = context_alloc(sizeof(lval_t));
+  lval_t*val = context_alloc(&tmp_arena, sizeof(lval_t));
   val->type = LVAL_SYM;
   val->cells = NULL;
   val->content.sym = atom_content;
