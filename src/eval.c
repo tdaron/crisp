@@ -23,6 +23,31 @@ lval_t* eval(lval_t* val) {
                 return lval_op_add(val->content.cells->next);
                 break;
             }
+            if (sv_eq(val->content.cells->content.sym, sv_from_cstr("*"))) {
+                return lval_op_mult(val->content.cells->next);
+                break;
+            }
+            if (sv_eq(val->content.cells->content.sym, sv_from_cstr("="))) {
+                lval_t* lhs = val->content.cells->next;
+                lval_t* rhs = lhs->next;
+                lval_t* result = allocate_lval(&current_context->arena, LVAL_NUM);
+                result->content.num = eval(lhs)->content.num == eval(rhs)->content.num;
+                return result;
+                break;
+            }
+            if (sv_eq(val->content.cells->content.sym, sv_from_cstr("if"))) {
+                lval_t* cond = val->content.cells->next;
+                lval_t* is_true = cond->next;
+                lval_t* not_true = is_true->next;
+
+                lval_t* cond_eval = eval(cond);
+
+                if (cond_eval->type == LVAL_NUM && cond_eval->content.num) {
+                    return eval(is_true);
+                }
+                return eval(not_true);
+                break;
+            }
             if (sv_eq(val->content.cells->content.sym,
                       sv_from_cstr("define"))) {
                 // TODO: Handle errors of number of args.

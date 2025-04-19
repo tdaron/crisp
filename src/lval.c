@@ -26,6 +26,28 @@ lval_t* lval_op_add(lval_t* cells) {
     return result;
 }
 
+lval_t* lval_op_mult(lval_t* cells) {
+    lval_t* curr = cells;
+    if (curr == NULL) return 0;
+    double acc = eval(curr)->content.num;
+    curr = curr->next;
+    while (curr != NULL) {
+        lval_t* curr_evaluated = eval(curr);
+        if (curr_evaluated->type != LVAL_NUM) {
+            fprintf(stderr, "Cannot multiply non numbers values.\n");
+            // TODO: Return proper error.
+            return cells;
+        }
+        acc *= curr_evaluated->content.num;
+        curr = curr->next;
+    }
+
+    lval_t* result = context_alloc(&tmp_arena, sizeof(lval_t));
+    result->type = LVAL_NUM;
+    result->content.num = acc;
+    return result;
+}
+
 void print_lval_debug(const lval_t* v, int indent);
 
 void print_indent(int indent) {

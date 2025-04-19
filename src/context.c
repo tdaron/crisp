@@ -1,7 +1,7 @@
 #include <context.h>
 #include <stdio.h>
 #include <string.h>
-
+#include <eval.h>
 #include "arena.h"
 #include "lval.h"
 
@@ -64,7 +64,7 @@ void match_args_params(lval_t* function, lval_t* call) {
     lval_t* curr_call = call->content.cells->next;
     while (curr_fct != NULL && curr_call != NULL) {
         
-        context_define_symbol(curr_fct, curr_call);
+        context_define_symbol(curr_fct, eval(curr_call));
         
         curr_fct = curr_fct->next;
         curr_call = curr_call->next;

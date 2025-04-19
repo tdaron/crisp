@@ -23,6 +23,7 @@ typedef struct lval {
 } lval_t;
 
 lval_t* lval_op_add(lval_t* cells);
+lval_t* lval_op_mult(lval_t* cells);
 
 void print_lval_debug(const lval_t* v, int indent);
 lval_t* allocate_lval(arena_t* arena, enum LVAL_TYPE type);
