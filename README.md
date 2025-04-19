@@ -17,6 +17,8 @@ Current supported features:
 
 - [x] Defines
 - [x] Basic addition
+- [x] Functions
+- [x] Recursion
 
 
 ## Samples
@@ -31,5 +33,9 @@ value: 200
 crisp> (+ x y (+ 1 2))
 type: NUM
 value: 303
+crisp> (define (fact n) (if (= n 0) 1 (* n (fact (+ n -1)))))
+crisp> (fact 5)
+type: NUM
+value: 120
 crisp>
 ```
