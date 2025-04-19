@@ -35,6 +35,22 @@ lval_t* eval(lval_t* val) {
                 return result;
                 break;
             }
+            if (sv_eq(val->content.cells->content.sym, sv_from_cstr("<"))) {
+                lval_t* lhs = val->content.cells->next;
+                lval_t* rhs = lhs->next;
+                lval_t* result = allocate_lval(&current_context->arena, LVAL_NUM);
+                result->content.num = eval(lhs)->content.num < eval(rhs)->content.num;
+                return result;
+                break;
+            }
+            if (sv_eq(val->content.cells->content.sym, sv_from_cstr(">"))) {
+                lval_t* lhs = val->content.cells->next;
+                lval_t* rhs = lhs->next;
+                lval_t* result = allocate_lval(&current_context->arena, LVAL_NUM);
+                result->content.num = eval(lhs)->content.num > eval(rhs)->content.num;
+                return result;
+                break;
+            }
             if (sv_eq(val->content.cells->content.sym, sv_from_cstr("if"))) {
                 lval_t* cond = val->content.cells->next;
                 lval_t* is_true = cond->next;
@@ -73,6 +89,7 @@ lval_t* eval(lval_t* val) {
                 push_context();
                 match_args_params(info, val);
                 lval_t* r = eval(result);
+                r = lval_clone(&current_context->parent->arena, r, false);
                 pop_context();
                 return r;
             }
