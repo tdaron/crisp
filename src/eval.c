@@ -28,14 +28,19 @@ lval_t* eval(lval_t* val) {
                 return lval_op_add(val->content.cells->next);
                 break;
             }
-            if (sv_eq(val->content.cells->content.sym, sv_from_cstr("define"))) {
+            if (sv_eq(val->content.cells->content.sym,
+                      sv_from_cstr("define"))) {
+                // TODO: Handle errors of number of args.
                 lval_t* name = val->content.cells->next;
                 lval_t* value = name->next;
+
+                // TODO: Handle errors of (define NUM something)
+                // that means nothing.
                 if (name->type == LVAL_SYM) {
                     value = eval(value);
                 }
                 state_define_symbol(name, value);
-                return eval(name);
+                return NULL;
             }
             break;
 
@@ -44,5 +49,6 @@ lval_t* eval(lval_t* val) {
             fprintf(stderr, "Unknown lval type: %d\n", val->type);
             return val;
     }
+    fprintf(stderr, "Couldnt execute this. Returning value as is.\n");
     return val;
 }
