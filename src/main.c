@@ -11,19 +11,19 @@
 
 arena_t tmp_arena = {0};
 
-context_t current_context = {0};
+context_t* current_context = NULL;
 
 int main() {
     printf("=================\n");
     printf("CRISP REPL v0.0.1\n");
     printf("=================\n");
-
+    push_context();
     while (1) {
         char* raw_input = readline("crisp> ");
         add_history(raw_input);
         size_t len = strlen(raw_input);
 
-        char* state_input = context_alloc(&current_context.arena, len + 1);
+        char* state_input = context_alloc(&current_context->arena, len + 1);
         memcpy(state_input, raw_input, len + 1);
         free(raw_input);
 
@@ -38,6 +38,6 @@ int main() {
         context_reset(&tmp_arena);
     }
     context_free(&tmp_arena);
-    context_free(&current_context.arena);
+    pop_context();
     return 0;
 }

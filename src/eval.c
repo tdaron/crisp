@@ -11,14 +11,8 @@ lval_t* eval(lval_t* val) {
             return val;
 
         case LVAL_SYM: {
-            symbol_t* curr = current_context.symbols;
-            while (curr != NULL) {
-                if (sv_eq(curr->sym->content.sym, val->content.sym)) {
-                    return curr->value;
-                }
-                curr = curr->next;
-            }
-
+            lval_t* result = lookup_symbol(current_context, val->content.sym);
+            if (result != NULL) return result;
             fprintf(stderr, "Symbol " SV_Fmt " not found\n",
                     SV_Arg(val->content.sym));
             return val;

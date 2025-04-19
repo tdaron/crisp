@@ -122,7 +122,7 @@ lval_t* lval_clone(arena_t* arena, const lval_t* v, bool clone_next_too) {
             }
             break;
         case LVAL_SEXPR:
-            copy->content.cells = lval_clone(arena, copy->content.cells, true);  // Recursively copy all cells
+            copy->content.cells = lval_clone(arena, v->content.cells, true);  // Recursively copy all cells
             break;
     }
 

@@ -18,5 +18,8 @@ typedef struct Context {
 } context_t;
 
 
-extern context_t current_context;
+extern context_t* current_context;
 void context_define_symbol(lval_t* symbol_val, lval_t* tmp_val);
+void pop_context();
+void push_context();
+lval_t* lookup_symbol(context_t* context, SV name);
