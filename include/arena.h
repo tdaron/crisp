@@ -10,7 +10,6 @@ typedef struct Arena {
 } arena_t;
 
 extern arena_t tmp_arena;
-extern arena_t state_arena;
 
 void* context_alloc(arena_t* arena, size_t size);
 void context_reset(arena_t* arena);

@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 #include "lval.h"
-#include "state.h"
+#include "context.h"
 #include "sv.h"
 
 lval_t* eval(lval_t* val) {
@@ -11,9 +11,9 @@ lval_t* eval(lval_t* val) {
             return val;
 
         case LVAL_SYM: {
-            symbol_t* curr = state.symbols;
+            symbol_t* curr = current_context.symbols;
             while (curr != NULL) {
-                if (sv_eq(curr->name, val->content.sym)) {
+                if (sv_eq(curr->sym->content.sym, val->content.sym)) {
                     return curr->value;
                 }
                 curr = curr->next;
@@ -39,7 +39,7 @@ lval_t* eval(lval_t* val) {
                 if (name->type == LVAL_SYM) {
                     value = eval(value);
                 }
-                state_define_symbol(name, value);
+                context_define_symbol(name, value);
                 return NULL;
             }
             break;

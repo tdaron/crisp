@@ -7,12 +7,11 @@
 #include <string.h>
 #include <sv.h>
 
-#include "state.h"
+#include "context.h"
 
 arena_t tmp_arena = {0};
-arena_t state_arena = {0};
 
-state_t state = {0};
+context_t current_context = {0};
 
 int main() {
     printf("=================\n");
@@ -24,7 +23,7 @@ int main() {
         add_history(raw_input);
         size_t len = strlen(raw_input);
 
-        char* state_input = context_alloc(&state_arena, len + 1);
+        char* state_input = context_alloc(&current_context.arena, len + 1);
         memcpy(state_input, raw_input, len + 1);
         free(raw_input);
 
@@ -39,6 +38,6 @@ int main() {
         context_reset(&tmp_arena);
     }
     context_free(&tmp_arena);
-    context_free(&state_arena);
+    context_free(&current_context.arena);
     return 0;
 }
