@@ -11,7 +11,8 @@ lval_t* eval(lval_t* val) {
             return val;
 
         case LVAL_SYM: {
-            lval_t* result = lookup_symbol(current_context, val->content.sym);
+            lval_t* info;
+            lval_t* result = lookup_symbol(current_context, val->content.sym, &info);
             if (result != NULL) return result;
             fprintf(stderr, "Symbol " SV_Fmt " not found\n",
                     SV_Arg(val->content.sym));
@@ -25,6 +26,7 @@ lval_t* eval(lval_t* val) {
             if (sv_eq(val->content.cells->content.sym,
                       sv_from_cstr("define"))) {
                 // TODO: Handle errors of number of args.
+                // TODO: Dont allow defining functions with numbers in their definition
                 lval_t* name = val->content.cells->next;
                 lval_t* value = name->next;
 
@@ -36,6 +38,20 @@ lval_t* eval(lval_t* val) {
                 context_define_symbol(name, value);
                 return NULL;
             }
+
+            // Check if there is a function with the name of the first cell (function_name arg1 arg2)
+            lval_t* info;
+            lval_t* result = lookup_symbol(current_context, val->content.cells->content.sym, &info);
+
+            // we just found a corresponding function
+            if (result != NULL && info->type == LVAL_SEXPR) {
+                push_context();
+                match_args_params(info, val);
+                lval_t* r = eval(result);
+                pop_context();
+                return r;
+            }
+            
             break;
 
         default:

@@ -34,15 +34,39 @@ void pop_context() {
     free(o);
 }
 
-lval_t* lookup_symbol(context_t* context, SV name) {
+lval_t* lookup_symbol(context_t* context, SV name, lval_t** symbol_info) {
     symbol_t* curr = context->symbols;
     while (curr != NULL) {
-        if (sv_eq(curr->sym->content.sym, name)) {
-            return curr->value;
+        if (curr->sym->type == LVAL_SYM) {
+            if (sv_eq(curr->sym->content.sym, name)) {
+                *symbol_info = curr->sym;
+                return curr->value;
+            }
+            
+        }
+        if (curr->sym->type == LVAL_SEXPR) {
+            if (sv_eq(curr->sym->content.cells->content.sym, name)) {
+                
+                *symbol_info = curr->sym;
+                return curr->value;
+            }
+            
         }
         curr = curr->next;
     }
     if (context->parent == NULL) return NULL;
     // lookup recursively into parent contexts
-    return lookup_symbol(context->parent, name);
+    return lookup_symbol(context->parent, name, symbol_info);
+}
+
+void match_args_params(lval_t* function, lval_t* call) {
+    lval_t* curr_fct = function->content.cells->next;
+    lval_t* curr_call = call->content.cells->next;
+    while (curr_fct != NULL && curr_call != NULL) {
+        
+        context_define_symbol(curr_fct, curr_call);
+        
+        curr_fct = curr_fct->next;
+        curr_call = curr_call->next;
+    }
 }
