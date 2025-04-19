@@ -16,7 +16,8 @@ Then you can launch the REPL using
 Current supported features:
 
 - [x] Defines
-- [x] Basic addition
+- [x] Basic addition / multiplication
+- [x] Branching (only if atm)
 - [x] Functions
 - [x] Recursion
 
