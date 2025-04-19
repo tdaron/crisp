@@ -24,13 +24,13 @@ lval_t* eval(lval_t* val) {
             return val;
         }
         case LVAL_SEXPR:
-            if (sv_eq(val->content.sym, sv_from_cstr("+"))) {
-                return lval_op_add(val->cells);
+            if (sv_eq(val->content.cells->content.sym, sv_from_cstr("+"))) {
+                return lval_op_add(val->content.cells->next);
                 break;
             }
-            if (sv_eq(val->content.sym, sv_from_cstr("define"))) {
-                lval_t* name = val->cells;
-                lval_t* value = val->cells->next;
+            if (sv_eq(val->content.cells->content.sym, sv_from_cstr("define"))) {
+                lval_t* name = val->content.cells->next;
+                lval_t* value = name->next;
                 if (name->type == LVAL_SYM) {
                     value = eval(value);
                 }

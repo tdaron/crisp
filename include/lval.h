@@ -1,5 +1,6 @@
 #pragma once
 
+#include "arena.h"
 #include "sv.h"
 enum LVAL_TYPE {
   LVAL_ERR = 0,
@@ -10,16 +11,18 @@ enum LVAL_TYPE {
 
 typedef struct lval {
   enum LVAL_TYPE type;
-  // linked list
-  struct lval *cells;
   union {
       char* err;
       SV sym;
       double num;
+      struct lval *cells;
   } content;
+
+  // linked list
   struct lval* next;
 } lval_t;
 
 lval_t* lval_op_add(lval_t* cells);
 
 void print_lval_debug(const lval_t* v, int indent);
+lval_t* allocate_lval(arena_t* arena, enum LVAL_TYPE type);

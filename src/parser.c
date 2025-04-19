@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "lval.h"
 #include "sv.h"
 
 bool is_whitespace(char v) { return v == ' '; }
@@ -15,20 +16,13 @@ lval_t* parse_sexpr(SV* input) {
     consume(input);  // first (
     sv_chop_left_while(input, is_whitespace);
 
-    lval_t* operand = parse_atom(input);
+    lval_t* sexpr = allocate_lval(&tmp_arena, LVAL_SEXPR);
 
-    if (operand->type != LVAL_SYM) {
-        printf("S-Expressions should start with a symbol...\n");
-    }
-
-    operand->type = LVAL_SEXPR;
-
-    sv_chop_left_while(input, is_whitespace);
     while (input->count > 0 && *input->data != ')') {
         lval_t* child = parse(input);
-        lval_t* last = operand->cells;
+        lval_t* last = sexpr->content.cells;
         if (last == NULL) {
-            operand->cells = child;
+            sexpr->content.cells = child;
         } else {
             while (last != NULL && last->next != NULL) {
                 last = last->next;
@@ -44,7 +38,7 @@ lval_t* parse_sexpr(SV* input) {
     }
 
     consume(input);  // last )
-    return operand;
+    return sexpr;
 }
 
 lval_t* parse_atom(SV* input) {
@@ -64,18 +58,13 @@ lval_t* parse_atom(SV* input) {
     char* end;
     double result = strtod(buf, &end);
     if (end != NULL && (size_t)(end - buf) == atom_content.count) {
-        lval_t* val = context_alloc(&tmp_arena, sizeof(lval_t));
-        val->type = LVAL_NUM;
-        val->cells = NULL;
+        lval_t* val = allocate_lval(&tmp_arena, LVAL_NUM);
         val->content.num = result;
-        val->next = NULL;
         return val;
     }
 
 sym: {
-    lval_t* val = context_alloc(&tmp_arena, sizeof(lval_t));
-    val->type = LVAL_SYM;
-    val->cells = NULL;
+    lval_t* val = allocate_lval(&tmp_arena, LVAL_SYM);
     val->content.sym = atom_content;
     val->next = NULL;
     return val;

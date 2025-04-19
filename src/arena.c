@@ -17,10 +17,11 @@ void* context_alloc(arena_t* context_arena, size_t size) {
         return NULL;
     }
 
+    void* addr = context_arena->data + context_arena->pad;
     context_arena->pad += size;
     context_arena->available -= size;
-    memset(context_arena->data + context_arena->pad, 0, size);
-    return context_arena->data + context_arena->pad - size;
+    memset(addr, 0, size);
+    return addr;
 }
 
 void context_reset(arena_t* context_arena) {

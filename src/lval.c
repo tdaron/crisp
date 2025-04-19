@@ -2,6 +2,7 @@
 #include <lval.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "eval.h"
 
@@ -67,17 +68,22 @@ void print_lval_debug(const lval_t* v, int indent) {
             printf(SV_Fmt "\n", SV_Arg(v->content.sym));
             break;
         case LVAL_SEXPR:
-            printf(SV_Fmt "\n", SV_Arg(v->content.sym));
             break;
     }
 
-    if (v->type == LVAL_SEXPR && v->cells) {
+    if (v->type == LVAL_SEXPR) {
         print_indent(indent);
         printf("children:\n");
-        const lval_t* child = v->cells;
+        const lval_t* child = v->content.cells;
         while (child) {
             print_lval_debug(child, indent + 2);
             child = child->next;
         }
     }
+}
+
+lval_t* allocate_lval(arena_t* arena, enum LVAL_TYPE type) {
+    lval_t* lval = context_alloc(arena, sizeof(lval_t));
+    lval->type = type;
+    return lval;
 }
