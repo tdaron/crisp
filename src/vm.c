@@ -44,19 +44,27 @@ const char* opcode_to_string(Opcode op) {
             return "OP_JUMP";
         case OP_POP:
             return "OP_POP";
+        case OP_CALL:
+            return "OP_CALL";
+        case OP_LOAD_SYMBOL:
+            return "OP_LOAD_SYMBOL";
+        case OP_RET:
+            return "OP_RET";
+        case OP_FUNCDEF:
+            return "OP_FUNCDEF";
+
         default:
             return "UNKNOWN_OPCODE";
     }
 }
 
-void execute(VM* vm, bytecode_t* code) {
+void execute(VM* vm, bytecode_t* code, size_t start_ip) {
     // Reset stack pointer and instruction pointer
     // vm->sp = 0;
-    vm->ip = 0;
+    vm->ip = start_ip;
 
     while (vm->ip < code->size) {
         Opcode opcode = code->items[vm->ip];
-        // printf("%s\n", opcode_to_string(opcode));
         vm->ip++;
         switch (opcode) {
             case OP_PUSH_CONST: {
@@ -142,21 +150,79 @@ void execute(VM* vm, bytecode_t* code) {
                 pop_value(vm);
                 break;
             }
+            case OP_LOAD_SYMBOL: {
+                double name_length = consume_bytecode(vm, code, double);
+                vm->ip += name_length;
+
+                // TODO: Real symbols. Right now every symbol resolves to 1.0
+                push_value(vm, DOUBLE_VAL(1.0));
+                break;
+            }
+            case OP_FUNCDEF: {
+                // TODO: macro for string load
+                double name_length = consume_bytecode(vm, code, double);
+                SV name = {.count = name_length,
+                           .data = (char*)code->items + vm->ip};
+                vm->ip += name_length;
+                double body_length = consume_bytecode(vm, code, double);
+                size_t function_position = vm->ip;
+                vm->ip += body_length;
+
+                Function* f = malloc(sizeof(Function));
+                f->position = function_position;
+                printf("Registered function " SV_Fmt " at position %ld\n",
+                       SV_Arg(name), function_position);
+                // TODO: support args
+                f->args_number = 0;
+                f->name = name;
+                f->next = vm->functions;
+                vm->functions = f;
+
+                break;
+            }
+            case OP_CALL: {
+                double name_length = consume_bytecode(vm, code, double);
+                SV name = {.count = name_length,
+                           .data = (char*)code->items + vm->ip};
+                vm->ip += name_length;
+
+                Function* function = vm->functions;
+                while (function != NULL) {
+                    if (sv_eq(function->name, name)) {
+                        break;
+                    }
+                    function = function->next;
+                }
+                if (function == NULL) {
+                    printf("Function " SV_Fmt " does not exist\n",
+                           SV_Arg(name));
+                } else {
+                    printf("Calling...\n");
+                    vm->call_stack[vm->csp].return_addr = vm->ip;
+                    vm->csp++;
+                    vm->ip = function->position;
+                }
+                break;
+            }
+            case OP_RET: {
+                vm->ip = vm->call_stack[--vm->csp].return_addr;
+                break;
+            }
             default:
                 printf("Opcode %d not supported\n", opcode);
                 break;
         }
-        printf("Stack: [");
-        for (int i = 0; i < vm->sp; i++) {
-            Value* val = &vm->stack[i];
-            if (val->type == VAL_DOUBLE) {
-                printf("%f ", vm->stack[i].as.d);
-            }
-            if (val->type == VAL_BOOL) {
-                printf("B%d ", vm->stack[i].as.b);
-            }
-        }
-        printf("]\n");
     }
-    pop_value(vm);
+    printf("Stack: [");
+    for (int i = 0; i < vm->sp; i++) {
+        Value* val = &vm->stack[i];
+        if (val->type == VAL_DOUBLE) {
+            printf("%f ", vm->stack[i].as.d);
+        }
+        if (val->type == VAL_BOOL) {
+            printf("B%d ", vm->stack[i].as.b);
+        }
+    }
+    printf("]\n");
+    vm->sp = 0;
 }
