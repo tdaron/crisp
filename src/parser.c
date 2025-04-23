@@ -16,7 +16,7 @@ lval_t* parse_sexpr(SV* input) {
     consume(input);  // first (
     sv_chop_left_while(input, is_whitespace);
 
-    lval_t* sexpr = allocate_lval(&tmp_arena, LVAL_SEXPR);
+    lval_t* sexpr = allocate_lval(&parsing_arena, LVAL_SEXPR);
 
     while (input->count > 0 && *input->data != ')') {
         lval_t* child = parse(input);
@@ -58,13 +58,13 @@ lval_t* parse_atom(SV* input) {
     char* end;
     double result = strtod(buf, &end);
     if (end != NULL && (size_t)(end - buf) == atom_content.count) {
-        lval_t* val = allocate_lval(&tmp_arena, LVAL_NUM);
+        lval_t* val = allocate_lval(&parsing_arena, LVAL_NUM);
         val->content.num = result;
         return val;
     }
 
 sym: {
-    lval_t* val = allocate_lval(&tmp_arena, LVAL_SYM);
+    lval_t* val = allocate_lval(&parsing_arena, LVAL_SYM);
     val->content.sym = atom_content;
     val->next = NULL;
     return val;

@@ -1,7 +1,9 @@
-#pragma once
-
 #include "arena.h"
 #include "sv.h"
+
+#ifndef LVAL_H
+#define LVAL_H
+
 enum LVAL_TYPE {
   LVAL_ERR = 0,
   LVAL_NUM,
@@ -28,3 +30,4 @@ lval_t* lval_op_mult(lval_t* cells);
 void print_lval_debug(const lval_t* v, int indent);
 lval_t* allocate_lval(arena_t* arena, enum LVAL_TYPE type);
 lval_t* lval_clone(arena_t* arena, const lval_t* v, bool clone_next_too);
+#endif
