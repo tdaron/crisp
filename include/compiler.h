@@ -10,9 +10,18 @@ typedef enum {
   OP_ADD,
   OP_SUB,
   OP_MULT,
-  OP_DIV
+  OP_DIV,
+  OP_EQ,
+  OP_GEQ,
+  OP_LEQ,
+  OP_GE,
+  OP_LE,
+  OP_JUMPF,
+  OP_JUMP,
+  OP_POP
 } Opcode ;
 
+const char* opcode_to_string(Opcode op);
 
 typedef struct Bytecode {
   uint8_t* items;
@@ -28,6 +37,7 @@ typedef struct Bytecode {
       else xs->capacity *= 2; \
       xs->items = realloc(xs->items, xs->capacity*sizeof(*xs->items)); \
     } \
+    printf("%ld: %s\n", xs->size, opcode_to_string(x));\
     xs->items[xs->size++] = (uint8_t)x; \
      \
   } while (0) \
