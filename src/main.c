@@ -16,6 +16,7 @@ int main() {
     printf("CRISP REPL v0.0.1\n");
     printf("=================\n");
     VM vm = {0};
+    add_history("(+ (if (= 1 1) 2 3) 4)");
     while (1) {
         char* raw_input = readline("crisp> ");
         add_history(raw_input);
@@ -37,6 +38,7 @@ int main() {
         // lval_t* result = eval(val);
         // print_lval_debug(result, 0);
         context_reset(&parsing_arena);
+        free(bytecode);
     }
     context_free(&parsing_arena);
     return 0;
