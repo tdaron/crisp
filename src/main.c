@@ -5,21 +5,23 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sv.h>
+#include <compiler.h>
+#include <vm.h>
 
-
-arena_t tmp_arena = {0};
+arena_t parsing_arena = {0};
 
 
 int main() {
     printf("=================\n");
     printf("CRISP REPL v0.0.1\n");
     printf("=================\n");
+    VM vm = {0};
     while (1) {
         char* raw_input = readline("crisp> ");
         add_history(raw_input);
         size_t len = strlen(raw_input);
 
-        char* state_input = context_alloc(&tmp_arena, len + 1);
+        char* state_input = context_alloc(&parsing_arena, len + 1);
         memcpy(state_input, raw_input, len + 1);
         free(raw_input);
 
@@ -28,11 +30,14 @@ int main() {
             break;
         }
         lval_t* val = parse(&input);
-        print_lval_debug(val, 0);
+        // print_lval_debug(val, 0);
+
+        bytecode_t* bytecode = compile(val, NULL);
+        execute(&vm, bytecode);
         // lval_t* result = eval(val);
         // print_lval_debug(result, 0);
-        context_reset(&tmp_arena);
+        context_reset(&parsing_arena);
     }
-    context_free(&tmp_arena);
+    context_free(&parsing_arena);
     return 0;
 }
