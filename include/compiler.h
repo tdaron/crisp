@@ -18,7 +18,11 @@ typedef enum {
   OP_LE,
   OP_JUMPF,
   OP_JUMP,
-  OP_POP
+  OP_POP,
+  OP_CALL,
+  OP_LOAD_SYMBOL,
+  OP_RET,
+  OP_FUNCDEF
 } Opcode ;
 
 const char* opcode_to_string(Opcode op);
@@ -30,20 +34,19 @@ typedef struct Bytecode {
 } bytecode_t;
 
 
-#define da_append(xs, x) \
+#define bytecode_append(xs, x) \
   do { \
     if (xs->size >= xs->capacity) { \
       if (xs->capacity == 0) xs->capacity = 256; \
       else xs->capacity *= 2; \
       xs->items = realloc(xs->items, xs->capacity*sizeof(*xs->items)); \
     } \
-    printf("%ld: %s\n", xs->size, opcode_to_string(x));\
     xs->items[xs->size++] = (uint8_t)x; \
      \
   } while (0) \
 
 
-#define da_append_block(xs, src_ptr, src_size) \
+#define bytecode_append_block(xs, src_ptr, src_size) \
   do { \
     size_t needed = xs->size + src_size; \
     if (needed > xs->capacity) { \
