@@ -23,8 +23,15 @@ typedef struct {
     } as;
 } Value;
 
-typedef struct {
+typedef struct s {
+    struct s* next;
+    Value val;
+    SV name;
+} Symbol;
+
+typedef struct cf {
     size_t return_addr;
+    Symbol* symbols;
 } CallFrame;
 
 typedef struct f {
