@@ -152,10 +152,27 @@ void execute(VM* vm, bytecode_t* code, size_t start_ip) {
             }
             case OP_LOAD_SYMBOL: {
                 double name_length = consume_bytecode(vm, code, double);
+                SV name = {.count = name_length,
+                           .data = (char*)code->items + vm->ip};
                 vm->ip += name_length;
 
-                // TODO: Real symbols. Right now every symbol resolves to 1.0
-                push_value(vm, DOUBLE_VAL(1.0));
+                Symbol* curr;
+                for (int csp = vm->csp; csp >=0; csp--) {
+                    curr = vm->call_stack[vm->csp].symbols;
+                    while (curr != NULL) {
+                        if (sv_eq(curr->name, name)) {
+                            push_value(vm, curr->val);
+                            break;
+                        }
+                        curr = curr->next;
+                    }
+                    if (curr != NULL) break;
+                } 
+
+                if (curr == NULL) {
+                    printf("value " SV_Fmt " not found..\n", SV_Arg(name));
+                    push_value(vm, DOUBLE_VAL(0));
+                }
                 break;
             }
             case OP_FUNCDEF: {
@@ -198,14 +215,28 @@ void execute(VM* vm, bytecode_t* code, size_t start_ip) {
                            SV_Arg(name));
                 } else {
                     printf("Calling...\n");
-                    vm->call_stack[vm->csp].return_addr = vm->ip;
                     vm->csp++;
+                    vm->call_stack[vm->csp].return_addr = vm->ip;
                     vm->ip = function->position;
                 }
                 break;
             }
             case OP_RET: {
-                vm->ip = vm->call_stack[--vm->csp].return_addr;
+                vm->ip = vm->call_stack[vm->csp--].return_addr;
+                break;
+            }
+            case OP_SET_SYMBOL: {
+                double name_length = consume_bytecode(vm, code, double);
+                SV name = {.count = name_length,
+                           .data = (char*)code->items + vm->ip};
+                vm->ip += name_length;
+                Value val = pop_value(vm);
+                // TODO: GC
+                Symbol* s = malloc(sizeof(Symbol));
+                s->name = name;
+                s->val = val;
+                s->next = vm->call_stack[vm->csp].symbols;
+                vm->call_stack[vm->csp].symbols = s;
                 break;
             }
             default:

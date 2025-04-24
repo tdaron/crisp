@@ -21,6 +21,7 @@ typedef enum {
   OP_POP,
   OP_CALL,
   OP_LOAD_SYMBOL,
+  OP_SET_SYMBOL,
   OP_RET,
   OP_FUNCDEF
 } Opcode ;

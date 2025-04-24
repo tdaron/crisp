@@ -10,6 +10,12 @@ void compile_simple(lval_t* args, bytecode_t* bytecode, Opcode opcode);
 #define SYM_IS(str) \
     sv_eq(sym_cell->content.sym, sv_from_parts(str, sizeof(str) - 1))
 
+void bytecode_add_sv(bytecode_t* bytecode, SV sv) {
+    double size = (double)sv.count;
+    bytecode_append_block(bytecode, &size, sizeof(double));
+    bytecode_append_block(bytecode, sv.data, sizeof(char) * size);
+}
+
 bytecode_t* compile(lval_t* val, bytecode_t* bytecode) {
     if (bytecode == NULL) bytecode = calloc(1, sizeof(bytecode_t));
 
@@ -25,11 +31,7 @@ bytecode_t* compile(lval_t* val, bytecode_t* bytecode) {
 
         case LVAL_SYM:
             bytecode_append(bytecode, OP_LOAD_SYMBOL);
-            double size = (double)val->content.sym.count;
-            bytecode_append_block(bytecode, &size, sizeof(double));
-            bytecode_append_block(bytecode, val->content.sym.data,
-                                  sizeof(char) * size);
-
+            bytecode_add_sv(bytecode, val->content.sym);
             break;
 
         case LVAL_SEXPR: {
@@ -55,21 +57,23 @@ bytecode_t* compile(lval_t* val, bytecode_t* bytecode) {
             } else if (SYM_IS(">")) {
                 compile_simple(args, bytecode, OP_GE);
             } else if (SYM_IS("define")) {
+                if (args->type == LVAL_SYM) {
+                    count_and_compile_cells(args->next, bytecode);
+                    bytecode_append(bytecode, OP_SET_SYMBOL);
+                    bytecode_add_sv(bytecode, args->content.sym);
+                    break;
+                }
                 bytecode_append(bytecode, OP_FUNCDEF);
                 lval_t* signature = args->content.cells;
                 SV name = signature->content.sym;
-                double size = (double)name.count;
-                bytecode_append_block(bytecode, &size, sizeof(double));
-                bytecode_append_block(bytecode, name.data,
-                                      sizeof(char) * name.count);
-
+                bytecode_add_sv(bytecode, name);
                 size_t size_pos = bytecode->size;
                 double body_size = 0;
                 bytecode_append_block(bytecode, &body_size, sizeof(double));
                 compile(args->next, bytecode);
                 bytecode_append(bytecode, OP_RET);
                 body_size = bytecode->size - size_pos - sizeof(double);
-                *((double*)(bytecode->items +size_pos)) = body_size;
+                *((double*)(bytecode->items + size_pos)) = body_size;
 
             } else if (SYM_IS("if")) {
                 // evaluate the if condition
@@ -117,11 +121,7 @@ bytecode_t* compile(lval_t* val, bytecode_t* bytecode) {
             } else {
                 count_and_compile_cells(args, bytecode);
                 bytecode_append(bytecode, OP_CALL);
-                double size = (double)sym_cell->content.sym.count;
-                bytecode_append_block(bytecode, &size, sizeof(double));
-                bytecode_append_block(bytecode, sym_cell->content.sym.data,
-                                      sizeof(char) * size);
-                
+                bytecode_add_sv(bytecode, sym_cell->content.sym);
             }
             break;
         }
