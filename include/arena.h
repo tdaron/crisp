@@ -8,11 +8,11 @@ typedef struct Arena {
   void* data;
   size_t pad;
   size_t available;
-} arena_t;
+} Arena;
 
-extern arena_t parsing_arena;
+extern Arena parsing_arena;
 
-void* context_alloc(arena_t* arena, size_t size);
-void context_reset(arena_t* arena);
-void context_free(arena_t* arena);
+void* context_alloc(Arena* arena, size_t size);
+void context_reset(Arena* arena);
+void context_free(Arena* arena);
 #endif

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void* context_alloc(arena_t* context_arena, size_t size) {
+void* context_alloc(Arena* context_arena, size_t size) {
     if (context_arena == NULL) {
         return NULL;
     }
@@ -24,11 +24,11 @@ void* context_alloc(arena_t* context_arena, size_t size) {
     return addr;
 }
 
-void context_reset(arena_t* context_arena) {
+void context_reset(Arena* context_arena) {
     context_arena->available += context_arena->pad;
     context_arena->pad = 0;
 }
-void context_free(arena_t* context_arena) {
+void context_free(Arena* context_arena) {
     if (context_arena->data != NULL) {
         free(context_arena->data);
     }
