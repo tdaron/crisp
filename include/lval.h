@@ -28,6 +28,6 @@ lval_t* lval_op_add(lval_t* cells);
 lval_t* lval_op_mult(lval_t* cells);
 
 void print_lval_debug(const lval_t* v, int indent);
-lval_t* allocate_lval(arena_t* arena, enum LVAL_TYPE type);
-lval_t* lval_clone(arena_t* arena, const lval_t* v, bool clone_next_too);
+lval_t* allocate_lval(Arena* arena, enum LVAL_TYPE type);
+lval_t* lval_clone(Arena* arena, const lval_t* v, bool clone_next_too);
 #endif

@@ -11,9 +11,9 @@ void* _consume_bytecode(VM* vm, bytecode_t* code, size_t size) {
 #define consume_bytecode(vm, code, x) \
     *(x*)_consume_bytecode(vm, code, sizeof(x))
 
-void push_value(VM* vm, Value val) { vm->stack[vm->sp++] = val; }
+void push_value(VM* vm, StackValue val) { vm->stack[vm->sp++] = val; }
 
-Value pop_value(VM* vm) { return vm->stack[--vm->sp]; }
+StackValue pop_value(VM* vm) { return vm->stack[--vm->sp]; }
 
 #define apply_cond(vm, v1, v2, cond) push_value(vm, BOOL_VAL(v1 cond v2));
 const char* opcode_to_string(Opcode op) {
@@ -76,7 +76,7 @@ void execute(VM* vm, bytecode_t* code, size_t start_ip) {
                 double num = consume_bytecode(vm, code, double);
                 double acc = 0;
                 for (size_t i = 0; i < num; i++) {
-                    Value val = pop_value(vm);
+                    StackValue val = pop_value(vm);
                     acc += val.as.d;
                 }
                 push_value(vm, DOUBLE_VAL(acc));
@@ -86,7 +86,7 @@ void execute(VM* vm, bytecode_t* code, size_t start_ip) {
                 double num = consume_bytecode(vm, code, double);
                 double acc = pop_value(vm).as.d;
                 for (size_t i = 0; i < num - 1; i++) {
-                    Value val = pop_value(vm);
+                    StackValue val = pop_value(vm);
                     acc *= val.as.d;
                 }
                 push_value(vm, DOUBLE_VAL(acc));
@@ -230,7 +230,7 @@ void execute(VM* vm, bytecode_t* code, size_t start_ip) {
                 SV name = {.count = name_length,
                            .data = (char*)code->items + vm->ip};
                 vm->ip += name_length;
-                Value val = pop_value(vm);
+                StackValue val = pop_value(vm);
                 // TODO: GC
                 Symbol* s = malloc(sizeof(Symbol));
                 s->name = name;
@@ -246,7 +246,7 @@ void execute(VM* vm, bytecode_t* code, size_t start_ip) {
     }
     printf("Stack: [");
     for (int i = 0; i < vm->sp; i++) {
-        Value* val = &vm->stack[i];
+        StackValue* val = &vm->stack[i];
         if (val->type == VAL_DOUBLE) {
             printf("%f ", vm->stack[i].as.d);
         }

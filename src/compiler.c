@@ -10,7 +10,33 @@ void compile_simple(lval_t* args, bytecode_t* bytecode, Opcode opcode);
 #define SYM_IS(str) \
     sv_eq(sym_cell->content.sym, sv_from_parts(str, sizeof(str) - 1))
 
-void bytecode_add_sv(bytecode_t* bytecode, SV sv) {
+static inline void bytecode_append(bytecode_t *xs, uint8_t x) {
+    if (xs->size >= xs->capacity) {
+        if (xs->capacity == 0) {
+            xs->capacity = 256;
+        } else {
+            xs->capacity *= 2;
+        }
+        xs->items = realloc(xs->items, xs->capacity * sizeof(*xs->items));
+    }
+    xs->items[xs->size++] = x;
+}
+
+static inline void bytecode_append_block(bytecode_t *xs, const void *src_ptr, size_t src_size) {
+    size_t needed = xs->size + src_size;
+    if (needed > xs->capacity) {
+        while (xs->capacity < needed) {
+            xs->capacity = (xs->capacity == 0) ? src_size * 10 : xs->capacity * 2;
+        }
+        xs->items = realloc(xs->items, xs->capacity * sizeof(*xs->items));
+    }
+    const uint8_t *src = (const uint8_t *)src_ptr;
+    for (size_t i = 0; i < src_size; i++) {
+        xs->items[xs->size++] = src[i];
+    }
+}
+
+static inline void bytecode_add_sv(bytecode_t* bytecode, SV sv) {
     double size = (double)sv.count;
     bytecode_append_block(bytecode, &size, sizeof(double));
     bytecode_append_block(bytecode, sv.data, sizeof(char) * size);

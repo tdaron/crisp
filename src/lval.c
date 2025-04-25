@@ -60,7 +60,7 @@ void print_lval_debug(const lval_t* v, int indent) {
     }
 }
 
-lval_t* allocate_lval(arena_t* arena, enum LVAL_TYPE type) {
+lval_t* allocate_lval(Arena* arena, enum LVAL_TYPE type) {
     lval_t* lval = context_alloc(arena, sizeof(lval_t));
     lval->type = type;
     return lval;

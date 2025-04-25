@@ -8,7 +8,7 @@
 #include <compiler.h>
 #include <vm.h>
 
-arena_t parsing_arena = {0};
+Arena parsing_arena = {0};
 
 
 int main() {
