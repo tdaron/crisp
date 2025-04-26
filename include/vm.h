@@ -3,6 +3,7 @@
 #include <unistd.h>
 #ifndef VM_H
 #define VM_H
+#include <hashmap.h>
 
 #define STACK_SIZE 2048
 #define NUM_GLOBALS 512
@@ -23,22 +24,17 @@ typedef struct {
     } as;
 } StackValue;
 
-typedef struct Symbol {
-    struct Symbol* next;
-    StackValue val;
-    SV name;
-} Symbol;
-
 typedef struct {
     size_t return_addr;
-    Symbol* symbols;
+    Hashmap symbols;
 } CallFrame;
 
 typedef struct Function {
     struct Function* next;  // linked list
     size_t position;
     size_t args_number;
-    SV name;
+    Hash name;
+    Hash* args;
 } Function;
 
 typedef struct {
@@ -50,6 +46,7 @@ typedef struct {
     int csp;                     // Call Stack Pointer
     StackValue globals[NUM_GLOBALS];  // variables globales simples
 } VM;
+
 
 #define IS_DOUBLE(v) ((v).type == VAL_DOUBLE)
 #define IS_BOOL(v) ((v).type == VAL_BOOL)

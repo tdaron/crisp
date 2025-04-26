@@ -1,4 +1,5 @@
 #include <compiler.h>
+#include <hashmap.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -10,7 +11,7 @@ void compile_simple(lval_t* args, bytecode_t* bytecode, Opcode opcode);
 #define SYM_IS(str) \
     sv_eq(sym_cell->content.sym, sv_from_parts(str, sizeof(str) - 1))
 
-static inline void bytecode_append(bytecode_t *xs, uint8_t x) {
+static inline void bytecode_append(bytecode_t* xs, uint8_t x) {
     if (xs->size >= xs->capacity) {
         if (xs->capacity == 0) {
             xs->capacity = 256;
@@ -22,25 +23,24 @@ static inline void bytecode_append(bytecode_t *xs, uint8_t x) {
     xs->items[xs->size++] = x;
 }
 
-static inline void bytecode_append_block(bytecode_t *xs, const void *src_ptr, size_t src_size) {
+static inline void bytecode_append_block(bytecode_t* xs, const void* src_ptr,
+                                         size_t src_size) {
     size_t needed = xs->size + src_size;
     if (needed > xs->capacity) {
         while (xs->capacity < needed) {
-            xs->capacity = (xs->capacity == 0) ? src_size * 10 : xs->capacity * 2;
+            xs->capacity =
+                (xs->capacity == 0) ? src_size * 10 : xs->capacity * 2;
         }
         xs->items = realloc(xs->items, xs->capacity * sizeof(*xs->items));
     }
-    const uint8_t *src = (const uint8_t *)src_ptr;
+    const uint8_t* src = (const uint8_t*)src_ptr;
     for (size_t i = 0; i < src_size; i++) {
         xs->items[xs->size++] = src[i];
     }
 }
 
-static inline void bytecode_add_sv(bytecode_t* bytecode, SV sv) {
-    double size = (double)sv.count;
-    bytecode_append_block(bytecode, &size, sizeof(double));
-    bytecode_append_block(bytecode, sv.data, sizeof(char) * size);
-}
+#define bytecode_append_hash(bytecode, hash) \
+    bytecode_append_block(bytecode, hash, sizeof(Hash))
 
 bytecode_t* compile(lval_t* val, bytecode_t* bytecode) {
     if (bytecode == NULL) bytecode = calloc(1, sizeof(bytecode_t));
@@ -57,7 +57,8 @@ bytecode_t* compile(lval_t* val, bytecode_t* bytecode) {
 
         case LVAL_SYM:
             bytecode_append(bytecode, OP_LOAD_SYMBOL);
-            bytecode_add_sv(bytecode, val->content.sym);
+            Hash hash = hash_sv(val->content.sym);
+            bytecode_append_hash(bytecode, &hash);
             break;
 
         case LVAL_SEXPR: {
@@ -86,13 +87,31 @@ bytecode_t* compile(lval_t* val, bytecode_t* bytecode) {
                 if (args->type == LVAL_SYM) {
                     count_and_compile_cells(args->next, bytecode);
                     bytecode_append(bytecode, OP_SET_SYMBOL);
-                    bytecode_add_sv(bytecode, args->content.sym);
+                    Hash hash = hash_sv(args->content.sym);
+                    bytecode_append_hash(bytecode, &hash);
                     break;
                 }
                 bytecode_append(bytecode, OP_FUNCDEF);
                 lval_t* signature = args->content.cells;
                 SV name = signature->content.sym;
-                bytecode_add_sv(bytecode, name);
+                Hash hash = hash_sv(name);
+                bytecode_append_hash(bytecode, &hash);
+
+
+                lval_t* f_args = signature->next;
+                uint8_t count = 0;
+                while (f_args != NULL) {
+                    count++;
+                    f_args = f_args->next;
+                }
+                bytecode_append(bytecode, count);
+                f_args = signature->next;
+                while (f_args != NULL) {
+                    Hash arg_hash = hash_sv(f_args->content.sym);
+                    bytecode_append_hash(bytecode, &arg_hash);
+                    f_args = f_args->next;
+                }
+
                 size_t size_pos = bytecode->size;
                 double body_size = 0;
                 bytecode_append_block(bytecode, &body_size, sizeof(double));
@@ -100,6 +119,8 @@ bytecode_t* compile(lval_t* val, bytecode_t* bytecode) {
                 bytecode_append(bytecode, OP_RET);
                 body_size = bytecode->size - size_pos - sizeof(double);
                 *((double*)(bytecode->items + size_pos)) = body_size;
+
+                
 
             } else if (SYM_IS("if")) {
                 // evaluate the if condition
@@ -147,7 +168,8 @@ bytecode_t* compile(lval_t* val, bytecode_t* bytecode) {
             } else {
                 count_and_compile_cells(args, bytecode);
                 bytecode_append(bytecode, OP_CALL);
-                bytecode_add_sv(bytecode, sym_cell->content.sym);
+                Hash hash = hash_sv(sym_cell->content.sym);
+                bytecode_append_hash(bytecode, &hash);
             }
             break;
         }
