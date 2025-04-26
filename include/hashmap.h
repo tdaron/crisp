@@ -38,4 +38,6 @@ static inline uint32_t __hash(const void *key, size_t len) {
 
 void hashmap_add(Hashmap* h, Hash key, void* value);
 void* hashmap_lookup(Hashmap* h, Hash key);
+void hashmap_reset(Hashmap* h);
+
 #endif

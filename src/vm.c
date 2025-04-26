@@ -67,6 +67,13 @@ const char* opcode_to_string(Opcode op) {
     }
 }
 
+void set_symbol(VM* vm, StackValue val, Hash name) {
+    size_t index = vm->call_stack[vm->csp].symbols.size;
+    vm->call_stack[vm->csp].symbols_stack[index] = val;
+    hashmap_add(&vm->call_stack[vm->csp].symbols, name,
+                &vm->call_stack[vm->csp].symbols_stack[index]);
+}
+
 void execute(VM* vm, bytecode_t* code, size_t start_ip) {
     // Reset stack pointer and instruction pointer
     // vm->sp = 0;
@@ -162,7 +169,7 @@ void execute(VM* vm, bytecode_t* code, size_t start_ip) {
             case OP_LOAD_SYMBOL: {
                 Hash hash = consume_bytecode(vm, code, Hash);
                 StackValue* val;
-                for (size_t i = vm->csp; i >= 0; i--) {
+                for (int i = vm->csp; i >= 0; i--) {
                     val = hashmap_lookup(&vm->call_stack[i].symbols, hash);
                     if (val != NULL) break;
                 }
@@ -187,8 +194,9 @@ void execute(VM* vm, bytecode_t* code, size_t start_ip) {
 
                 Function* f = malloc(sizeof(Function));
                 f->position = function_position;
-                printf("Registered function %08X at position %ld with %d args\n", name_hash,
-                       function_position, args_number);
+                printf(
+                    "Registered function %08X at position %ld with %d args\n",
+                    name_hash, function_position, args_number);
                 // TODO: support args
                 f->args_number = args_number;
                 f->name = name_hash;
@@ -213,25 +221,24 @@ void execute(VM* vm, bytecode_t* code, size_t start_ip) {
                     vm->csp++;
                     vm->call_stack[vm->csp].return_addr = vm->ip;
                     for (size_t i = 0; i < function->args_number; i++) {
-                     StackValue arg = pop_value(vm);
-                     vm->call_stack[vm->csp].args_stack[i] = arg;
-                     Hash name = function->args[function->args_number - i - 1];
-                     hashmap_add(&vm->call_stack[vm->csp].symbols, name, &vm->call_stack[vm->csp].args_stack[i]);   
+                        StackValue arg = pop_value(vm);
+                        Hash name =
+                            function->args[function->args_number - i - 1];
+                        set_symbol(vm, arg, name);
                     }
                     vm->ip = function->position;
                 }
                 break;
             }
             case OP_RET: {
+                // hashmap_reset(&vm->call_stack[vm->csp].symbols);
                 vm->ip = vm->call_stack[vm->csp--].return_addr;
                 break;
             }
             case OP_SET_SYMBOL: {
                 Hash hash = consume_bytecode(vm, code, Hash);
                 StackValue val = pop_value(vm);
-                StackValue* gval = malloc(sizeof(StackValue));
-                memcpy(gval, &val, sizeof(StackValue));
-                hashmap_add(&vm->call_stack[vm->csp].symbols, hash, gval);
+                set_symbol(vm, val, hash);
                 break;
             }
             default:
@@ -251,7 +258,6 @@ void execute(VM* vm, bytecode_t* code, size_t start_ip) {
             }
         }
         printf("]\n");
-        
     }
     vm->sp = 0;
 }

@@ -1,5 +1,6 @@
 #include <hashmap.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -20,7 +21,7 @@ static void hashmap_resize(Hashmap* h) {
 
     // Double the capacity
     h->capacity *= 2;
-    if (h->capacity == 0) h->capacity = 1;
+    if (h->capacity == 0) h->capacity = 128;
     h->buckets = malloc(h->capacity * sizeof(Bucket));
 
     // Initialize new buckets to zero
@@ -92,9 +93,11 @@ void* hashmap_lookup(Hashmap* h, Hash hash) {
     return bucket_lookup(bucket, hash, NULL);
 }
 
-void hashmap_free(Hashmap* h) {
+void hashmap_reset(Hashmap* h) {
     for (uint32_t i = 0; i < h->capacity; ++i) {
         free(h->buckets[i].items);
     }
     free(h->buckets);
+    h->capacity = 0;
+    h->size = 0;
 }
