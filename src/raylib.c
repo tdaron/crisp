@@ -48,6 +48,21 @@ void f_WindowShouldClose(VM* vm) {
     PUSH_BOOL(vm, (shouldClose ? 1.0 : 0.0));
 }
 
+void f_RightPressed(VM* vm) {
+    PUSH_BOOL(vm, IsKeyDown(KEY_RIGHT));
+}
+void f_LeftPressed(VM* vm) {
+    PUSH_BOOL(vm, IsKeyDown(KEY_LEFT));
+}
+void f_UpPressed(VM* vm) {
+    PUSH_BOOL(vm, IsKeyDown(KEY_UP));
+}
+void f_DownPressed(VM* vm) {
+    PUSH_BOOL(vm, IsKeyDown(KEY_DOWN));
+}
+
+void f_nop() {}
+
 // Ferme la fenêtre
 void f_CloseWindow() { CloseWindow(); }
 #endif
@@ -62,6 +77,11 @@ void bind_raylib(VM* vm) {
     add_ffi_func(vm, sv_from_cstr("end-drawing"), f_EndDrawing);
     add_ffi_func(vm, sv_from_cstr("window-should-close"), f_WindowShouldClose);
     add_ffi_func(vm, sv_from_cstr("close-window"), f_CloseWindow);
+    add_ffi_func(vm, sv_from_cstr("right-pressed"), f_RightPressed);
+    add_ffi_func(vm, sv_from_cstr("down-pressed"), f_DownPressed);
+    add_ffi_func(vm, sv_from_cstr("up-pressed"), f_UpPressed);
+    add_ffi_func(vm, sv_from_cstr("left-pressed"), f_LeftPressed);
+    add_ffi_func(vm, sv_from_cstr("nop"), f_nop);
     #else
     (void)vm;
     #endif

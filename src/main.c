@@ -12,16 +12,20 @@
 
 Arena parsing_arena = {0};
 
-void test(VM* vm) {
+void print(VM* vm) {
     double a1 = POP_DOUBLE(vm);
-    printf("Hello, World ! %f\n", a1);
+    printf("%f\n", a1);
 }
 
+void f_exit() {
+    printf("CRASH \n");
+    exit(1);
+}
 int main(int argc, char* argv[]) {
-    VM vm = {0};
-    add_ffi_func(&vm, sv_from_cstr("test"), test);
-    bind_raylib(&vm);
-    vm.sp = 0;
+    VM *vm = calloc(1, sizeof(VM));
+    add_ffi_func(vm, sv_from_cstr("print"), print);
+    add_ffi_func(vm, sv_from_cstr("exit"), f_exit);
+    bind_raylib(vm);
     bytecode_t* bytecode = calloc(1, sizeof(bytecode_t));
     
     // Check if a file was provided as an argument
@@ -66,7 +70,7 @@ int main(int argc, char* argv[]) {
             
             struct timespec start, end;
             clock_gettime(CLOCK_MONOTONIC, &start);
-            execute(&vm, bytecode, starting_point);
+            execute(vm, bytecode, starting_point);
             clock_gettime(CLOCK_MONOTONIC, &end);
             
             long elapsed_ms = (end.tv_sec - start.tv_sec) * 1000 +
@@ -102,7 +106,7 @@ int main(int argc, char* argv[]) {
             bytecode = compile(val, bytecode);
             struct timespec start, end;
             clock_gettime(CLOCK_MONOTONIC, &start);
-            execute(&vm, bytecode, starting_point);
+            execute(vm, bytecode, starting_point);
             clock_gettime(CLOCK_MONOTONIC, &end);
             long elapsed_ms = (end.tv_sec - start.tv_sec) * 1000 +
                               (end.tv_nsec - start.tv_nsec) / 1000000;

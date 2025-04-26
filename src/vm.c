@@ -59,19 +59,23 @@ const char* opcode_to_string(Opcode op) {
     }
 }
 
-void set_symbol(VM* vm, StackValue val, Hash name) {
-    size_t index = vm->call_stack[vm->csp].sp++;
-    vm->call_stack[vm->csp].symbols_stack[index] = val;
+void set_arg(VM* vm, StackValue val, Hash name) {
+    size_t index = vm->call_stack[vm->csp].asp++;
+    vm->call_stack[vm->csp].args_stack[index] = val;
     hashmap_add(&vm->call_stack[vm->csp].symbols, name,
-                &vm->call_stack[vm->csp].symbols_stack[index]);
+                &vm->call_stack[vm->csp].args_stack[index]);
 }
 
-double fibo(double n) {
-    if (n < 2)
-        return n;
-
-    else
-        return (fibo(n - 2) + fibo(n - 1));
+void set_symbol(VM* vm, StackValue val, Hash name, size_t csp) {
+    StackValue* old = hashmap_lookup(&vm->call_stack[csp].symbols, name);
+    if (old != NULL) {
+        *old = val;
+        return;
+    }
+    size_t index = vm->call_stack[csp].ssp++;
+    vm->call_stack[csp].symbols_stack[index] = val;
+    hashmap_add(&vm->call_stack[csp].symbols, name,
+                &vm->call_stack[csp].symbols_stack[index]);
 }
 
 
@@ -234,12 +238,13 @@ void execute(VM* vm, bytecode_t* code, size_t start_ip) {
                     if (vm->ip < code->size && code->items[vm->ip] == OP_RET) {
                         // Tail Call Optimization: reuse current CallFrame
                         vm->ip++;  // Skip the OP_RET
+                        vm->call_stack[vm->csp].ssp = 0;
                         for (size_t i = 0; i < function->args_number; i++) {
                             // Re-setting args without re-computing hashes/...
                             StackValue arg = pop_value(vm);
-                            size_t index = vm->call_stack[vm->csp].sp;
+                            size_t index = vm->call_stack[vm->csp].asp;
                             vm->call_stack[vm->csp]
-                                .symbols_stack[index - function->args_number +
+                                .args_stack[index - function->args_number +
                                                i] = arg;
                         }
                         vm->ip = function->position;
@@ -251,7 +256,7 @@ void execute(VM* vm, bytecode_t* code, size_t start_ip) {
                         StackValue arg = pop_value(vm);
                         Hash name =
                             function->args[function->args_number - i - 1];
-                        set_symbol(vm, arg, name);
+                        set_arg(vm, arg, name);
                         // vm->call_stack[vm->csp].symbols_stack[i] = arg;
                         // hashmap_add(&vm->call_stack[vm->csp].symbols, name,
                         //             &vm->call_stack[vm->csp].symbols_stack[i]);
@@ -261,7 +266,8 @@ void execute(VM* vm, bytecode_t* code, size_t start_ip) {
                 break;
             }
             case OP_RET: {
-                vm->call_stack[vm->csp].sp = 0;
+                vm->call_stack[vm->csp].asp = 0;
+                vm->call_stack[vm->csp].ssp = 0;
                 vm->ip = vm->call_stack[vm->csp--].return_addr;
                 break;
             }
@@ -269,7 +275,13 @@ void execute(VM* vm, bytecode_t* code, size_t start_ip) {
                 Hash hash = consume_bytecode(vm, code, Hash);
                 StackValue val = pop_value(vm);
                 // TODO: fix this. can currently be overwritten by TCO
-                set_symbol(vm, val, hash);
+                StackValue* curr = NULL;
+                size_t csp = vm->csp;
+                for (int i = vm->csp; i >= 0; i--) {
+                    curr = hashmap_lookup(&vm->call_stack[i].symbols, hash);
+                    if (curr != NULL) csp = i;
+                }
+                set_symbol(vm, val, hash, csp);
                 break;
             }
             default:
