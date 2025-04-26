@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Iinclude -Wall -Wextra -O3 #-fsanitize=address 
+CFLAGS = -Iinclude -Wall -Wextra -O3 -lraylib #-fsanitize=address 
 SRC = $(wildcard src/*.c)
 OBJ = $(patsubst src/%.c, build/%.o, $(SRC))
 BIN = crisp-repl

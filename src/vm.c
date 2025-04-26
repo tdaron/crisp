@@ -75,6 +75,11 @@ double fibo(double n) {
 }
 
 
+void add_ffi_func(VM* vm, SV functionName, void(*fptr)(VM* vm)) {
+    Hash hash = hash_sv(functionName);
+    hashmap_add(&vm->ffi, hash, fptr);
+}
+
 void execute(VM* vm, bytecode_t* code, size_t start_ip) {
     // Reset stack pointer and instruction pointer
     // vm->sp = 0;
@@ -209,10 +214,10 @@ void execute(VM* vm, bytecode_t* code, size_t start_ip) {
             }
             case OP_CALL: {
                 Hash f_hash = consume_bytecode(vm, code, Hash);
-                if (f_hash == hash_sv(sv_from_cstr("cfib"))) {
-                    StackValue val = pop_value(vm);
-                    double result = fibo(val.as.d);
-                    push_value(vm, DOUBLE_VAL(result));
+                void* v = hashmap_lookup(&vm->ffi, f_hash);
+                if (v != NULL) {
+                    void(*fptr)(VM* vm) = v;
+                    fptr(vm);
                     break;
                 }
                 Function* function = vm->functions;

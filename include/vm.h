@@ -39,6 +39,7 @@ typedef struct Function {
     Hash* args;
 } Function;
 
+
 typedef struct {
     Function* functions;  // Functions linked list
     CallFrame call_stack[STACK_SIZE];
@@ -47,6 +48,7 @@ typedef struct {
     size_t ip;                   // Instruction Pointer
     int csp;                     // Call Stack Pointer
     StackValue globals[NUM_GLOBALS];  // variables globales simples
+    Hashmap ffi;
 } VM;
 
 
@@ -60,5 +62,10 @@ typedef struct {
 #define PTR_VAL(p) ((StackValue){VAL_PTR, {.ptr = (p)}})
 
 void execute(VM* vm, bytecode_t* code, size_t start_ip);
+void add_ffi_func(VM* vm, SV functionName, void(*fptr)(VM* vm));
+void push_value(VM* vm, StackValue val);
+StackValue pop_value(VM* vm);
+#define POP_DOUBLE(vm) pop_value(vm).as.d;
+#define PUSH_DOUBLE(vm, x) push_value(vm, DOUBLE_VAL(x));
 
 #endif

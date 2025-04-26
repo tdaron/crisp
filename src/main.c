@@ -7,15 +7,23 @@
 #include <string.h>
 #include <sv.h>
 #include <time.h>
+#include <raylib_bind.h>
 #include <vm.h>
 
 Arena parsing_arena = {0};
+
+void test(VM* vm) {
+    double a1 = POP_DOUBLE(vm);
+    printf("Hello, World ! %f\n", a1);
+}
 
 int main() {
     printf("=================\n");
     printf("CRISP REPL v0.0.1\n");
     printf("=================\n");
     VM vm = {0};
+    add_ffi_func(&vm, sv_from_cstr("test"), test);
+    bind_raylib(&vm);
     vm.sp = 0;
     add_history("(+ (if (= 1 1) 2 3) 4)");
     add_history("(begin (define (square n) (+ n n)) (+ 1 2))");
