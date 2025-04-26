@@ -161,8 +161,11 @@ void execute(VM* vm, bytecode_t* code, size_t start_ip) {
             }
             case OP_LOAD_SYMBOL: {
                 Hash hash = consume_bytecode(vm, code, Hash);
-                StackValue* val =
-                    hashmap_lookup(&vm->call_stack[vm->csp].symbols, hash);
+                StackValue* val;
+                for (size_t i = vm->csp; i >= 0; i--) {
+                    val = hashmap_lookup(&vm->call_stack[i].symbols, hash);
+                    if (val != NULL) break;
+                }
                 if (val == NULL) {
                     printf("Unknown symbol...\n");
                     break;
@@ -211,10 +214,9 @@ void execute(VM* vm, bytecode_t* code, size_t start_ip) {
                     vm->call_stack[vm->csp].return_addr = vm->ip;
                     for (size_t i = 0; i < function->args_number; i++) {
                      StackValue arg = pop_value(vm);
-                     StackValue* na = malloc(sizeof(StackValue));
-                     memcpy(na, &arg, sizeof(StackValue));
+                     vm->call_stack[vm->csp].args_stack[i] = arg;
                      Hash name = function->args[function->args_number - i - 1];
-                     hashmap_add(&vm->call_stack[vm->csp].symbols, name, na);   
+                     hashmap_add(&vm->call_stack[vm->csp].symbols, name, &vm->call_stack[vm->csp].args_stack[i]);   
                     }
                     vm->ip = function->position;
                 }

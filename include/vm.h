@@ -27,6 +27,7 @@ typedef struct {
 typedef struct {
     size_t return_addr;
     Hashmap symbols;
+    StackValue args_stack[128];
 } CallFrame;
 
 typedef struct Function {
