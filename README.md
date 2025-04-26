@@ -2,7 +2,8 @@
 
 # Crisp
 
-Crisp is a Lisp-like programming language designed for both scripting and configuration tasks. While it doesn't have a specific purpose, it's lightweight (though it still requires libc) and can be embedded wherever needed. Crisp also includes basic Raylib bindings, allowing you to create graphical applications!
+
+Crisp is a Lisp-like programming language designed for both scripting and configuration tasks. While it doesn't have a specific purpose, it's lightweight (though it still requires libc) and can be embedded wherever needed. This repository includes both a compiler that targets a custom stack-based virtual machine and the VM implementation itself. Crisp also includes basic Raylib bindings, allowing you to create graphical applications!
 
 ## Syntax
 
