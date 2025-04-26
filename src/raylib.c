@@ -1,8 +1,9 @@
-#include <raylib.h>
 #include <vm.h>
+#ifdef WITH_RAYLIB
+#include <raylib.h>
 
 // Désactiver les logs raylib dès le départ
-void f_DisableLogs(VM* vm) { SetTraceLogLevel(LOG_NONE); }
+void f_DisableLogs() { SetTraceLogLevel(LOG_NONE); }
 
 // Ouvre une fenêtre (width, height)
 void f_InitWindow(VM* vm) {
@@ -12,7 +13,7 @@ void f_InitWindow(VM* vm) {
 }
 
 // Commence un nouveau dessin
-void f_BeginDrawing(VM* vm) { BeginDrawing(); }
+void f_BeginDrawing() { BeginDrawing(); }
 
 // Efface l'écran avec une couleur (r, g, b)
 void f_ClearBackground(VM* vm) {
@@ -39,7 +40,7 @@ void f_DrawRectangle(VM* vm) {
 }
 
 // Termine le dessin courant
-void f_EndDrawing(VM* vm) { EndDrawing(); }
+void f_EndDrawing() { EndDrawing(); }
 
 // Vérifie si la fenêtre doit se fermer, retourne 1.0 ou 0.0
 void f_WindowShouldClose(VM* vm) {
@@ -48,10 +49,11 @@ void f_WindowShouldClose(VM* vm) {
 }
 
 // Ferme la fenêtre
-void f_CloseWindow(VM* vm) { CloseWindow(); }
-
+void f_CloseWindow() { CloseWindow(); }
+#endif
 // Fonction pour enregistrer tous les bindings
 void bind_raylib(VM* vm) {
+    #ifdef WITH_RAYLIB
     add_ffi_func(vm, sv_from_cstr("disable-logs"), f_DisableLogs);
     add_ffi_func(vm, sv_from_cstr("init-window"), f_InitWindow);
     add_ffi_func(vm, sv_from_cstr("begin-drawing"), f_BeginDrawing);
@@ -60,4 +62,7 @@ void bind_raylib(VM* vm) {
     add_ffi_func(vm, sv_from_cstr("end-drawing"), f_EndDrawing);
     add_ffi_func(vm, sv_from_cstr("window-should-close"), f_WindowShouldClose);
     add_ffi_func(vm, sv_from_cstr("close-window"), f_CloseWindow);
+    #else
+    (void)vm;
+    #endif
 }

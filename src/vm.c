@@ -174,7 +174,7 @@ void execute(VM* vm, bytecode_t* code, size_t start_ip) {
             }
             case OP_LOAD_SYMBOL: {
                 Hash hash = consume_bytecode(vm, code, Hash);
-                StackValue* val;
+                StackValue* val = NULL;
                 for (int i = vm->csp; i >= 0; i--) {
                     val = hashmap_lookup(&vm->call_stack[i].symbols, hash);
                     if (val != NULL) break;

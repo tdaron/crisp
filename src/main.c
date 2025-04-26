@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
         
         // Get file size
         fseek(file, 0, SEEK_END);
-        long file_size = ftell(file);
+        size_t file_size = ftell(file);
         fseek(file, 0, SEEK_SET);
         
         // Read file contents
