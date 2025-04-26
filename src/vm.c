@@ -16,14 +16,6 @@ void push_value(VM* vm, StackValue val) { vm->stack[vm->sp++] = val; }
 
 StackValue pop_value(VM* vm) { return vm->stack[--vm->sp]; }
 
-// TODO: Arena allocator for each data type allocated.
-//       So we can then have a GC looking at every arena item.
-//       This will allow easy memory handling as the GC will take care of
-//       everything. Only issue: the arena cannot easily find new places to
-//       allow inside an area Might have some kind of nice indicator. Maybe
-//       using the marker bit. could be nice It would also make the arena a
-//       piece of the GC.
-
 #define apply_cond(vm, v1, v2, cond) push_value(vm, BOOL_VAL(v1 cond v2));
 const char* opcode_to_string(Opcode op) {
     switch (op) {
