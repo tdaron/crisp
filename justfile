@@ -1,3 +1,3 @@
 run:
     make
-    ./crisp-repl
+    ./crisp

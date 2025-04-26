@@ -67,5 +67,6 @@ void push_value(VM* vm, StackValue val);
 StackValue pop_value(VM* vm);
 #define POP_DOUBLE(vm) pop_value(vm).as.d;
 #define PUSH_DOUBLE(vm, x) push_value(vm, DOUBLE_VAL(x));
+#define PUSH_BOOL(vm, x) push_value(vm, BOOL_VAL(x));
 
 #endif

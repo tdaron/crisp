@@ -7,7 +7,7 @@
 #include "lval.h"
 #include "sv.h"
 
-bool is_whitespace(char v) { return v == ' '; }
+bool is_whitespace(char v) { return v == ' ' || v == '\n'; }
 
 bool valid_sym(char v) { return !(is_whitespace(v)) && v != ')'; }
 lval_t* parse_atom(SV* input);

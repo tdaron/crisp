@@ -1,11 +1,8 @@
-#include <stdio.h>
-#include <vm.h>
 #include <raylib.h>
+#include <vm.h>
 
 // Désactiver les logs raylib dès le départ
-void f_DisableLogs(VM* vm) {
-    SetTraceLogLevel(LOG_NONE);
-}
+void f_DisableLogs(VM* vm) { SetTraceLogLevel(LOG_NONE); }
 
 // Ouvre une fenêtre (width, height)
 void f_InitWindow(VM* vm) {
@@ -15,17 +12,15 @@ void f_InitWindow(VM* vm) {
 }
 
 // Commence un nouveau dessin
-void f_BeginDrawing(VM* vm) {
-    BeginDrawing();
-}
+void f_BeginDrawing(VM* vm) { BeginDrawing(); }
 
 // Efface l'écran avec une couleur (r, g, b)
 void f_ClearBackground(VM* vm) {
     double b = POP_DOUBLE(vm);
     double g = POP_DOUBLE(vm);
     double r = POP_DOUBLE(vm);
-    printf("Clearing %f %f %f\n", r, g , b);
-    ClearBackground((Color){ (unsigned char)r, (unsigned char)g, (unsigned char)b, 255 });
+    ClearBackground(
+        (Color){(unsigned char)r, (unsigned char)g, (unsigned char)b, 255});
 }
 
 // Dessine un rectangle (x, y, width, height, r, g, b)
@@ -37,29 +32,26 @@ void f_DrawRectangle(VM* vm) {
     double width = POP_DOUBLE(vm);
     double y = POP_DOUBLE(vm);
     double x = POP_DOUBLE(vm);
-    
-    DrawRectangle((int)x, (int)y, (int)width, (int)height, (Color){ (unsigned char)r, (unsigned char)g, (unsigned char)b, 255 });
+
+    DrawRectangle(
+        (int)x, (int)y, (int)width, (int)height,
+        (Color){(unsigned char)r, (unsigned char)g, (unsigned char)b, 255});
 }
 
 // Termine le dessin courant
-void f_EndDrawing(VM* vm) {
-    EndDrawing();
-}
+void f_EndDrawing(VM* vm) { EndDrawing(); }
 
 // Vérifie si la fenêtre doit se fermer, retourne 1.0 ou 0.0
 void f_WindowShouldClose(VM* vm) {
     bool shouldClose = WindowShouldClose();
-    PUSH_DOUBLE(vm, (shouldClose ? 1.0 : 0.0));
+    PUSH_BOOL(vm, (shouldClose ? 1.0 : 0.0));
 }
 
 // Ferme la fenêtre
-void f_CloseWindow(VM* vm) {
-    CloseWindow();
-}
+void f_CloseWindow(VM* vm) { CloseWindow(); }
 
 // Fonction pour enregistrer tous les bindings
 void bind_raylib(VM* vm) {
-    SetTraceLogLevel(LOG_NONE); // Optionnel ici car aussi dans f_DisableLogs
     add_ffi_func(vm, sv_from_cstr("disable-logs"), f_DisableLogs);
     add_ffi_func(vm, sv_from_cstr("init-window"), f_InitWindow);
     add_ffi_func(vm, sv_from_cstr("begin-drawing"), f_BeginDrawing);
