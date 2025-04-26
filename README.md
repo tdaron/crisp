@@ -26,17 +26,16 @@ Current supported features:
 
 ```sc
 crisp> (define x 100)
-type: NUM
-value: 100
 crisp> (define y 200)
-type: NUM
-value: 200
 crisp> (+ x y (+ 1 2))
-type: NUM
-value: 303
-crisp> (define (fact n) (if (= n 0) 1 (* n (fact (+ n -1)))))
+Stack: [303.000000 ]
+crisp>  (define (fact n) (if (= n 0) 1 (* n (fact (+ n -1)))))
+Registered function 026B603F at position 237 with 1 args
 crisp> (fact 5)
-type: NUM
-value: 120
+Stack: [120.000000 ]
+crisp> (define (fib n) (if (< n 2) n (+ (fib (- n 1)) (fib (- n 2)))))
+Registered function BCE49236 at position 354 with 1 args
+crisp> (fib 28)
+Stack: [317811.000000 ]
 crisp>
 ```
