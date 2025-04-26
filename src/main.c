@@ -19,6 +19,7 @@ int main() {
     vm.sp = 0;
     add_history("(+ (if (= 1 1) 2 3) 4)");
     add_history("(begin (define (square n) (+ n n)) (+ 1 2))");
+    add_history("(define (fib n) (if (< n 2) n (+ (fib (- n 1)) (fib (- n 2)))))");
     bytecode_t* bytecode = calloc(1, sizeof(bytecode_t));
     while (1) {
         char* raw_input = readline("crisp> ");

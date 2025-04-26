@@ -66,6 +66,15 @@ void set_symbol(VM* vm, StackValue val, Hash name) {
                 &vm->call_stack[vm->csp].symbols_stack[index]);
 }
 
+double fibo(double n) {
+    if (n < 2)
+        return n;
+
+    else
+        return (fibo(n - 2) + fibo(n - 1));
+}
+
+
 void execute(VM* vm, bytecode_t* code, size_t start_ip) {
     // Reset stack pointer and instruction pointer
     // vm->sp = 0;
@@ -200,6 +209,12 @@ void execute(VM* vm, bytecode_t* code, size_t start_ip) {
             }
             case OP_CALL: {
                 Hash f_hash = consume_bytecode(vm, code, Hash);
+                if (f_hash == hash_sv(sv_from_cstr("cfib"))) {
+                    StackValue val = pop_value(vm);
+                    double result = fibo(val.as.d);
+                    push_value(vm, DOUBLE_VAL(result));
+                    break;
+                }
                 Function* function = vm->functions;
                 while (function != NULL) {
                     if (function->name == f_hash) {
@@ -248,7 +263,7 @@ void execute(VM* vm, bytecode_t* code, size_t start_ip) {
             case OP_SET_SYMBOL: {
                 Hash hash = consume_bytecode(vm, code, Hash);
                 StackValue val = pop_value(vm);
-                //TODO: fix this. can currently be overwritten by TCO
+                // TODO: fix this. can currently be overwritten by TCO
                 set_symbol(vm, val, hash);
                 break;
             }
@@ -272,3 +287,4 @@ void execute(VM* vm, bytecode_t* code, size_t start_ip) {
     }
     vm->sp = 0;
 }
+
