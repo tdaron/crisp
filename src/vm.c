@@ -60,7 +60,7 @@ const char* opcode_to_string(Opcode op) {
 }
 
 void set_symbol(VM* vm, StackValue val, Hash name) {
-    size_t index = vm->call_stack[vm->csp].symbols.size;
+    size_t index = vm->call_stack[vm->csp].sp++;
     vm->call_stack[vm->csp].symbols_stack[index] = val;
     hashmap_add(&vm->call_stack[vm->csp].symbols, name,
                 &vm->call_stack[vm->csp].symbols_stack[index]);
@@ -217,13 +217,16 @@ void execute(VM* vm, bytecode_t* code, size_t start_ip) {
                         Hash name =
                             function->args[function->args_number - i - 1];
                         set_symbol(vm, arg, name);
+                        // vm->call_stack[vm->csp].symbols_stack[i] = arg;
+                        // hashmap_add(&vm->call_stack[vm->csp].symbols, name,
+                        //             &vm->call_stack[vm->csp].symbols_stack[i]);
                     }
                     vm->ip = function->position;
                 }
                 break;
             }
             case OP_RET: {
-                // hashmap_reset(&vm->call_stack[vm->csp].symbols);
+                vm->call_stack[vm->csp].sp = 0;
                 vm->ip = vm->call_stack[vm->csp--].return_addr;
                 break;
             }
