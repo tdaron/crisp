@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 #include <vm.h>
 
 void* _consume_bytecode(VM* vm, bytecode_t* code, size_t size) {
@@ -14,6 +15,14 @@ void* _consume_bytecode(VM* vm, bytecode_t* code, size_t size) {
 void push_value(VM* vm, StackValue val) { vm->stack[vm->sp++] = val; }
 
 StackValue pop_value(VM* vm) { return vm->stack[--vm->sp]; }
+
+// TODO: Arena allocator for each data type allocated.
+//       So we can then have a GC looking at every arena item.
+//       This will allow easy memory handling as the GC will take care of
+//       everything. Only issue: the arena cannot easily find new places to
+//       allow inside an area Might have some kind of nice indicator. Maybe
+//       using the marker bit. could be nice It would also make the arena a
+//       piece of the GC.
 
 #define apply_cond(vm, v1, v2, cond) push_value(vm, BOOL_VAL(v1 cond v2));
 const char* opcode_to_string(Opcode op) {
@@ -151,72 +160,62 @@ void execute(VM* vm, bytecode_t* code, size_t start_ip) {
                 break;
             }
             case OP_LOAD_SYMBOL: {
-                double name_length = consume_bytecode(vm, code, double);
-                SV name = {.count = name_length,
-                           .data = (char*)code->items + vm->ip};
-                vm->ip += name_length;
-
-                Symbol* curr;
-                for (int csp = vm->csp; csp >=0; csp--) {
-                    curr = vm->call_stack[vm->csp].symbols;
-                    while (curr != NULL) {
-                        if (sv_eq(curr->name, name)) {
-                            push_value(vm, curr->val);
-                            break;
-                        }
-                        curr = curr->next;
-                    }
-                    if (curr != NULL) break;
-                } 
-
-                if (curr == NULL) {
-                    printf("value " SV_Fmt " not found..\n", SV_Arg(name));
-                    push_value(vm, DOUBLE_VAL(0));
+                Hash hash = consume_bytecode(vm, code, Hash);
+                StackValue* val =
+                    hashmap_lookup(&vm->call_stack[vm->csp].symbols, hash);
+                if (val == NULL) {
+                    printf("Unknown symbol...\n");
+                    break;
                 }
+                StackValue to_push = {.type = val->type, .as = val->as};
+                push_value(vm, to_push);
                 break;
             }
             case OP_FUNCDEF: {
-                // TODO: macro for string load
-                double name_length = consume_bytecode(vm, code, double);
-                SV name = {.count = name_length,
-                           .data = (char*)code->items + vm->ip};
-                vm->ip += name_length;
+                Hash name_hash = consume_bytecode(vm, code, Hash);
+                uint8_t args_number = consume_bytecode(vm, code, uint8_t);
+
+                Hash* args = (Hash*)(code->items + vm->ip);
+                vm->ip += sizeof(Hash) * args_number;
+
                 double body_length = consume_bytecode(vm, code, double);
                 size_t function_position = vm->ip;
                 vm->ip += body_length;
 
                 Function* f = malloc(sizeof(Function));
                 f->position = function_position;
-                printf("Registered function " SV_Fmt " at position %ld\n",
-                       SV_Arg(name), function_position);
+                printf("Registered function %08X at position %ld with %d args\n", name_hash,
+                       function_position, args_number);
                 // TODO: support args
-                f->args_number = 0;
-                f->name = name;
+                f->args_number = args_number;
+                f->name = name_hash;
                 f->next = vm->functions;
+                f->args = args;
                 vm->functions = f;
 
                 break;
             }
             case OP_CALL: {
-                double name_length = consume_bytecode(vm, code, double);
-                SV name = {.count = name_length,
-                           .data = (char*)code->items + vm->ip};
-                vm->ip += name_length;
-
+                Hash f_hash = consume_bytecode(vm, code, Hash);
                 Function* function = vm->functions;
                 while (function != NULL) {
-                    if (sv_eq(function->name, name)) {
+                    if (function->name == f_hash) {
                         break;
                     }
                     function = function->next;
                 }
                 if (function == NULL) {
-                    printf("Function " SV_Fmt " does not exist\n",
-                           SV_Arg(name));
+                    printf("Function  %08X does not exist\n", f_hash);
                 } else {
-                    printf("Calling...\n");
                     vm->csp++;
                     vm->call_stack[vm->csp].return_addr = vm->ip;
+                    for (size_t i = 0; i < function->args_number; i++) {
+                     StackValue arg = pop_value(vm);
+                     StackValue* na = malloc(sizeof(StackValue));
+                     memcpy(na, &arg, sizeof(StackValue));
+                     Hash name = function->args[function->args_number - i - 1];
+                     hashmap_add(&vm->call_stack[vm->csp].symbols, name, na);   
+                    }
                     vm->ip = function->position;
                 }
                 break;
@@ -226,17 +225,11 @@ void execute(VM* vm, bytecode_t* code, size_t start_ip) {
                 break;
             }
             case OP_SET_SYMBOL: {
-                double name_length = consume_bytecode(vm, code, double);
-                SV name = {.count = name_length,
-                           .data = (char*)code->items + vm->ip};
-                vm->ip += name_length;
+                Hash hash = consume_bytecode(vm, code, Hash);
                 StackValue val = pop_value(vm);
-                // TODO: GC
-                Symbol* s = malloc(sizeof(Symbol));
-                s->name = name;
-                s->val = val;
-                s->next = vm->call_stack[vm->csp].symbols;
-                vm->call_stack[vm->csp].symbols = s;
+                StackValue* gval = malloc(sizeof(StackValue));
+                memcpy(gval, &val, sizeof(StackValue));
+                hashmap_add(&vm->call_stack[vm->csp].symbols, hash, gval);
                 break;
             }
             default:
