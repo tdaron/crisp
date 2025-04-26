@@ -1,15 +1,15 @@
 #include <arena.h>
+#include <compiler.h>
 #include <editline/readline.h>
 #include <parser.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sv.h>
-#include <compiler.h>
+#include <time.h>
 #include <vm.h>
 
 Arena parsing_arena = {0};
-
 
 int main() {
     printf("=================\n");
@@ -38,7 +38,16 @@ int main() {
 
         size_t starting_point = bytecode->size;
         bytecode = compile(val, bytecode);
+        struct timespec start, end;
+        clock_gettime(CLOCK_MONOTONIC, &start);
+
         execute(&vm, bytecode, starting_point);
+
+        clock_gettime(CLOCK_MONOTONIC, &end);
+
+        long elapsed_ms = (end.tv_sec - start.tv_sec) * 1000 +
+                          (end.tv_nsec - start.tv_nsec) / 1000000;
+        printf("Execution time: %ld ms\n", elapsed_ms);
         // lval_t* result = eval(val);
         // print_lval_debug(result, 0);
         context_reset(&parsing_arena);

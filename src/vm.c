@@ -210,6 +210,21 @@ void execute(VM* vm, bytecode_t* code, size_t start_ip) {
                 if (function == NULL) {
                     printf("Function  %08X does not exist\n", f_hash);
                 } else {
+                    // TCO
+                    if (vm->ip < code->size && code->items[vm->ip] == OP_RET) {
+                        // Tail Call Optimization: reuse current CallFrame
+                        vm->ip++;  // Skip the OP_RET
+                        for (size_t i = 0; i < function->args_number; i++) {
+                            // Re-setting args without re-computing hashes/...
+                            StackValue arg = pop_value(vm);
+                            size_t index = vm->call_stack[vm->csp].sp;
+                            vm->call_stack[vm->csp]
+                                .symbols_stack[index - function->args_number +
+                                               i] = arg;
+                        }
+                        vm->ip = function->position;
+                        break;  // Jump directly without call stack push
+                    }
                     vm->csp++;
                     vm->call_stack[vm->csp].return_addr = vm->ip;
                     for (size_t i = 0; i < function->args_number; i++) {
@@ -233,6 +248,7 @@ void execute(VM* vm, bytecode_t* code, size_t start_ip) {
             case OP_SET_SYMBOL: {
                 Hash hash = consume_bytecode(vm, code, Hash);
                 StackValue val = pop_value(vm);
+                //TODO: fix this. can currently be overwritten by TCO
                 set_symbol(vm, val, hash);
                 break;
             }
