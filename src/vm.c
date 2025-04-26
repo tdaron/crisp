@@ -237,16 +237,19 @@ void execute(VM* vm, bytecode_t* code, size_t start_ip) {
                 break;
         }
     }
-    printf("Stack: [");
-    for (int i = 0; i < vm->sp; i++) {
-        StackValue* val = &vm->stack[i];
-        if (val->type == VAL_DOUBLE) {
-            printf("%f ", vm->stack[i].as.d);
+    if (vm->sp > 0) {
+        printf("Stack: [");
+        for (int i = 0; i < vm->sp; i++) {
+            StackValue* val = &vm->stack[i];
+            if (val->type == VAL_DOUBLE) {
+                printf("%f ", vm->stack[i].as.d);
+            }
+            if (val->type == VAL_BOOL) {
+                printf("B%d ", vm->stack[i].as.b);
+            }
         }
-        if (val->type == VAL_BOOL) {
-            printf("B%d ", vm->stack[i].as.b);
-        }
+        printf("]\n");
+        
     }
-    printf("]\n");
     vm->sp = 0;
 }
